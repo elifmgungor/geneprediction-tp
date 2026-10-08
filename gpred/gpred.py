@@ -175,16 +175,18 @@ def write_genes(fasta_file: Path, sequence: str, probable_genes: List[List[int]]
     :param probable_genes_comp: (list)List of [start, stop] position of each predicted genes in 3' -> 5'.
     """
     try:
-        with open(fasta_file, "wt") as fasta:
-            for i,gene_pos in enumerate(probable_genes):
-                fasta.write(">gene_{0}{1}{2}{1}".format(
-                    i+1, os.linesep, 
-                    fill(sequence[gene_pos[0]-1:gene_pos[1]])))
-            i = i+1
-            for j,gene_pos in enumerate(probable_genes_comp):
-                fasta.write(">gene_{0}{1}{2}{1}".format(
-                            i+1+j, os.linesep,
-                            fill(sequence_rc[gene_pos[0]-1:gene_pos[1]])))
+        with open(fasta_file, "w", encoding="utf-8") as fasta:
+            number = 1
+            for start, stop in probable_genes:
+                gene = sequence[start - 1:stop]
+                fasta.write(f">gene_{number}\n")
+                fasta.write(textwrap.fill(gene, width=80) + "\n")
+                number += 1
+            for start, stop in probable_genes_comp:
+                gene = sequence_rc[start - 1:stop]
+                fasta.write(f">gene_{number}\n")
+                fasta.write(textwrap.fill(gene, width=80) + "\n")
+                number += 1
     except IOError:
         sys.exit("Error cannot open {}".format(fasta_file))
 
@@ -217,16 +219,27 @@ def main() -> None: # pragma: no cover
     shine_regex = re.compile('A?G?GAGG|GGAG|GG.{1}GG')
     # Arguments
     args = get_arguments()
-    # Let us do magic in 5' to 3'
-    
-    # Don't forget to uncomment !!!
-    # Call these function in the order that you want
-    # We reverse and complement
-    #sequence_rc = reverse_complement(sequence)
-    # Call to output functions
-    #write_genes_pos(args.predicted_genes_file, probable_genes)
-    #write_genes(args.fasta_file, sequence, probable_genes, sequence_rc, probable_genes_comp)
+    sequence = read_fasta(args.genome_file)
+    probable_genes = predict_genes(
+        sequence, start_regex, stop_regex, shine_regex,
+        args.min_gene_len, args.max_shine_dalgarno_distance, args.min_gap
+    )
 
+    sequence_rc = reverse_complement(sequence)
+    probable_genes_comp = predict_genes(
+        sequence_rc, start_regex, stop_regex, shine_regex,
+        args.min_gene_len, args.max_shine_dalgarno_distance, args.min_gap
+    )
+
+    positions = probable_genes.copy()
+    for start, stop in probable_genes_comp:
+        # Conversion des positions du brin inverse vers le genome de depart.
+        positions.append([len(sequence) - stop + 1, len(sequence) - start + 1])
+    positions.sort()
+    write_genes_pos(args.predicted_genes_file, positions)
+    write_genes(
+        args.fasta_file, sequence, probable_genes, sequence_rc, probable_genes_comp
+    )
 
 
 if __name__ == '__main__':
