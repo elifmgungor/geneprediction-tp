@@ -1,0 +1,21 @@
+Comparaison des positions exactes (debut et fin identiques)
+
+Reference : 2867 genes
+Prodigal : 2875 genes
+Notre prediction : 4167 candidats
+
+Communs aux trois listes : 1303
+Notre prediction et reference : 1327
+Notre prediction et Prodigal : 1354
+Uniquement notre prediction : 2789
+
+Reference retrouvee exactement : 46.29 %
+Predictions avec correspondance exacte dans la reference : 31.85 %
+
+Ces comparaisons exigent deux coordonnees identiques. Un gene avec un
+codon start different est considere comme une position differente, meme
+s'il chevauche un gene de reference. Les candidats supplementaires ne sont
+pas tous des genes verifies. Cette methode simplifiee ne modelise pas tous
+les signaux biologiques et ne traite pas les genes chevauchants sur un meme brin.
+
+Parametres : longueur minimale 50, distance Shine-Dalgarno 16, gap minimal 40.
